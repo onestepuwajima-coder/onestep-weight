@@ -78,7 +78,7 @@ type ChartPoint = {
   night: number | null;
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() + d.getTimezoneOffset() + 540); return d.toISOString().slice(0, 10); };
 
 const initialForm: FormState = {
   date: today(),
