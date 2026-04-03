@@ -283,6 +283,45 @@ function WeightChartCard({
 /*  メインアプリ                                                        */
 /* ------------------------------------------------------------------ */
 
+
+function WeightPicker({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  const parsed = value ? Number(value) : 0;
+  const tens = Math.floor(parsed / 10) % 10;
+  const ones = Math.floor(parsed) % 10;
+  const dec = Math.round((parsed % 1) * 10);
+
+  const buildValue = (t: number, o: number, d: number) => {
+    const v = t * 10 + o + d * 0.1;
+    onChange(v.toFixed(1));
+  };
+
+  const wheelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", height: 120, overflowY: "auto", scrollSnapType: "y mandatory", WebkitOverflowScrolling: "touch", width: 52, borderRadius: 12, background: "var(--color-background-secondary, #f8fafc)", border: "1px solid #e2e8f0" };
+  const itemStyle = (active: boolean): React.CSSProperties => ({ scrollSnapAlign: "center", height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: active ? 22 : 16, fontWeight: active ? 600 : 400, color: active ? "#0f172a" : "#94a3b8", cursor: "pointer", minWidth: 52, transition: "all 0.15s" });
+
+  const Wheel = ({ items, selected, onSelect }: { items: number[]; selected: number; onSelect: (n: number) => void }) => {
+    const ref = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => { if (ref.current) { const el = ref.current.children[selected] as HTMLElement; if (el) el.scrollIntoView({ block: "center" }); } }, []);
+    return (
+      <div ref={ref} style={wheelStyle} onScroll={(e) => { const el = e.currentTarget; const idx = Math.round(el.scrollTop / 40); if (items[idx] !== undefined && items[idx] !== selected) onSelect(items[idx]); }}>
+        {items.map((n) => (<div key={n} style={itemStyle(n === selected)} onClick={() => onSelect(n)}>{n}</div>))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontSize: 14, fontWeight: 500, color: "#334155", marginBottom: 8 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "center" }}>
+        <Wheel items={[3,4,5,6,7,8,9]} selected={tens} onSelect={(t) => buildValue(t, ones, dec)} />
+        <Wheel items={[0,1,2,3,4,5,6,7,8,9]} selected={ones} onSelect={(o) => buildValue(tens, o, dec)} />
+        <div style={{ fontSize: 24, fontWeight: 600, color: "#334155", padding: "0 2px" }}>.</div>
+        <Wheel items={[0,1,2,3,4,5,6,7,8,9]} selected={dec} onSelect={(d) => buildValue(tens, ones, d)} />
+        <div style={{ fontSize: 14, color: "#64748b", marginLeft: 4 }}>kg</div>
+      </div>
+    </div>
+  );
+}
+
 export default function WeightManagementApp() {
   /* ---------- state ---------- */
   const [loading, setLoading] = useState(true);
@@ -1144,32 +1183,8 @@ export default function WeightManagementApp() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="morning_weight">朝の体重 (kg)</Label>
-                      <Input
-                        id="morning_weight"
-                        type="number"
-                        step="0.1"
-                        placeholder="例 62.4"
-                        value={form.morning_weight}
-                        onChange={(e) =>
-                          change("morning_weight", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="night_weight">夜の体重 (kg)</Label>
-                      <Input
-                        id="night_weight"
-                        type="number"
-                        step="0.1"
-                        placeholder="例 63.1"
-                        value={form.night_weight}
-                        onChange={(e) =>
-                          change("night_weight", e.target.value)
-                        }
-                      />
-                    </div>
+                    <div><WeightPicker label="朝の体重" value={form.morning_weight || "56.0"} onChange={(v) => change("morning_weight", v)} /></div>
+                    <div><WeightPicker label="夜の体重" value={form.night_weight || "56.0"} onChange={(v) => change("night_weight", v)} /></div>
                   </div>
 
                   <div className="space-y-3">
