@@ -676,29 +676,27 @@ export default function WeightManagementApp() {
           .sort((a, b) => a.date.localeCompare(b.date))
       );
     } else {
-      // 新規
-      const { data, error } = await supabase
-        .from("records")
-        .insert(payload)
-        .select()
-        .single();
-      if (error) return setMessage("保存に失敗しました。");
-
-      const newRecord: RecordItem = {
-        id: data.id,
-        member_name: payload.member_name,
-        date: payload.date,
-        morning_weight: payload.morning_weight,
-        night_weight: payload.night_weight,
-        breakfast: payload.breakfast,
-        lunch: payload.lunch,
-        dinner: payload.dinner,
-        reflection: payload.reflection,
-        admin_reply: payload.admin_reply,
-      };
-      setRecords((prev) =>
-        [...prev, newRecord].sort((a, b) => a.date.localeCompare(b.date))
+      const existing = records.find(
+        (r) => r.member_name === targetName && r.date === form.date
       );
+      if (existing) {
+        const merged = {
+          ...payload,
+          morning_weight: payload.morning_weight || existing.morning_weight,
+          night_weight: payload.night_weight || existing.night_weight,
+          reflection: payload.reflection || existing.reflection,
+          admin_reply: role === "admin" ? payload.admin_reply : existing.admin_reply,
+        };
+        const { error } = await supabase.from("records").update(merged).eq("id", existing.id);
+        if (error) return setMessage("更新に失敗しました。");
+        setRecords((prev) => prev.map((r) => (r.id === existing.id ? { ...r, ...merged } : r)).sort((a, b) => a.date.localeCompare(b.date)));
+        setMessage("同日の記録を更新しました。");
+      } else {
+        const { data, error } = await supabase.from("records").insert(payload).select().single();
+        if (error) return setMessage("保存に失敗しました。");
+        const newRecord: RecordItem = { id: data.id, member_name: payload.member_name, date: payload.date, morning_weight: payload.morning_weight, night_weight: payload.night_weight, breakfast: payload.breakfast, lunch: payload.lunch, dinner: payload.dinner, reflection: payload.reflection, admin_reply: payload.admin_reply };
+        setRecords((prev) => [...prev, newRecord].sort((a, b) => a.date.localeCompare(b.date)));
+      }
     }
 
     setMessage("記録を保存しました。");
