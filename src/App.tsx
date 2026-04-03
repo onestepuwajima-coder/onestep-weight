@@ -969,11 +969,6 @@ export default function WeightManagementApp() {
               <h1 className="mt-1 text-xl font-bold text-slate-800 md:text-3xl">
                 One Step：体重管理
               </h1>
-              <p className="mt-2 text-sm text-slate-600">
-                {role === "member"
-                  ? `${currentMemberName}さんの記録のみ表示中です。ほかの会員情報は表示されません。`
-                  : "管理者画面です。登録済み会員から選択して閲覧・返信できます。"}
-              </p>
             </div>
             <Button
               type="button"
