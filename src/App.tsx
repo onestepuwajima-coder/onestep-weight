@@ -285,38 +285,83 @@ function WeightChartCard({
 
 
 function WeightPicker({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
-  const parsed = value ? Number(value) : 0;
+  const parsed = value ? Number(value) : 56.0;
   const tens = Math.floor(parsed / 10) % 10;
   const ones = Math.floor(parsed) % 10;
   const dec = Math.round((parsed % 1) * 10);
 
   const buildValue = (t: number, o: number, d: number) => {
-    const v = t * 10 + o + d * 0.1;
-    onChange(v.toFixed(1));
+    onChange((t * 10 + o + d * 0.1).toFixed(1));
   };
 
-  const wheelStyle: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", height: 120, overflowY: "auto", scrollSnapType: "y mandatory", WebkitOverflowScrolling: "touch", width: 52, borderRadius: 12, background: "var(--color-background-secondary, #f8fafc)", border: "1px solid #e2e8f0" };
-  const itemStyle = (active: boolean): React.CSSProperties => ({ scrollSnapAlign: "center", height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: active ? 22 : 16, fontWeight: active ? 600 : 400, color: active ? "#0f172a" : "#94a3b8", cursor: "pointer", minWidth: 52, transition: "all 0.15s" });
+  const Drum = ({ items, selected, onSelect }: { items: number[]; selected: number; onSelect: (n: number) => void }) => {
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const startY = React.useRef(0);
+    const startScroll = React.useRef(0);
+    const isDragging = React.useRef(false);
+    const ITEM_H = 48;
 
-  const Wheel = ({ items, selected, onSelect }: { items: number[]; selected: number; onSelect: (n: number) => void }) => {
-    const ref = React.useRef<HTMLDivElement>(null);
-    React.useEffect(() => { if (ref.current) { const el = ref.current.children[selected] as HTMLElement; if (el) el.scrollIntoView({ block: "center" }); } }, []);
+    React.useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      const idx = items.indexOf(selected);
+      el.scrollTop = idx * ITEM_H;
+    }, []);
+
+    const snap = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const idx = Math.round(el.scrollTop / ITEM_H);
+      const clamped = Math.max(0, Math.min(idx, items.length - 1));
+      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
+      if (items[clamped] !== selected) onSelect(items[clamped]);
+    };
+
+    const onTouchStart = (e: React.TouchEvent) => {
+      isDragging.current = true;
+      startY.current = e.touches[0].clientY;
+      startScroll.current = containerRef.current?.scrollTop || 0;
+    };
+    const onTouchMove = (e: React.TouchEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      e.stopPropagation();
+      const dy = startY.current - e.touches[0].clientY;
+      containerRef.current.scrollTop = startScroll.current + dy;
+    };
+    const onTouchEnd = () => { isDragging.current = false; snap(); };
+
     return (
-      <div ref={ref} style={wheelStyle} onScroll={(e) => { const el = e.currentTarget; const idx = Math.round(el.scrollTop / 40); if (items[idx] !== undefined && items[idx] !== selected) onSelect(items[idx]); }}>
-        {items.map((n) => (<div key={n} style={itemStyle(n === selected)} onClick={() => onSelect(n)}>{n}</div>))}
+      <div style={{ position: "relative", height: ITEM_H * 3, width: 56, overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: ITEM_H, left: 0, right: 0, height: ITEM_H, background: "#f1f5f9", borderRadius: 10, border: "2px solid #3b82f6", zIndex: 0, pointerEvents: "none" }} />
+        <div
+          ref={containerRef}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{ position: "relative", zIndex: 1, height: ITEM_H * 3, overflowY: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", touchAction: "none" }}
+        >
+          <div style={{ height: ITEM_H }} />
+          {items.map((n) => {
+            const active = n === selected;
+            return (
+              <div key={n} onClick={() => { onSelect(n); const el = containerRef.current; if (el) { const idx = items.indexOf(n); el.scrollTo({ top: idx * ITEM_H, behavior: "smooth" }); }}} style={{ height: ITEM_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: active ? 26 : 18, fontWeight: active ? 700 : 400, color: active ? "#0f172a" : "#cbd5e1", cursor: "pointer", userSelect: "none", transition: "all 0.1s" }}>{n}</div>
+            );
+          })}
+          <div style={{ height: ITEM_H }} />
+        </div>
       </div>
     );
   };
 
   return (
     <div style={{ marginBottom: 8 }}>
-      <div style={{ fontSize: 14, fontWeight: 500, color: "#334155", marginBottom: 8 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "center" }}>
-        <Wheel items={[3,4,5,6,7,8,9]} selected={tens} onSelect={(t) => buildValue(t, ones, dec)} />
-        <Wheel items={[0,1,2,3,4,5,6,7,8,9]} selected={ones} onSelect={(o) => buildValue(tens, o, dec)} />
-        <div style={{ fontSize: 24, fontWeight: 600, color: "#334155", padding: "0 2px" }}>.</div>
-        <Wheel items={[0,1,2,3,4,5,6,7,8,9]} selected={dec} onSelect={(d) => buildValue(tens, ones, d)} />
-        <div style={{ fontSize: 14, color: "#64748b", marginLeft: 4 }}>kg</div>
+      <div style={{ fontSize: 14, fontWeight: 500, color: "#334155", marginBottom: 10 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
+        <Drum items={[3,4,5,6,7,8,9]} selected={tens} onSelect={(t) => buildValue(t, ones, dec)} />
+        <Drum items={[0,1,2,3,4,5,6,7,8,9]} selected={ones} onSelect={(o) => buildValue(tens, o, dec)} />
+        <div style={{ fontSize: 28, fontWeight: 700, color: "#334155", padding: "0 1px", alignSelf: "center" }}>.</div>
+        <Drum items={[0,1,2,3,4,5,6,7,8,9]} selected={dec} onSelect={(d) => buildValue(tens, ones, d)} />
+        <div style={{ fontSize: 16, color: "#64748b", marginLeft: 6, alignSelf: "center" }}>kg</div>
       </div>
     </div>
   );
