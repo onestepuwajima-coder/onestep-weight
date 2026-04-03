@@ -503,7 +503,7 @@ export default function WeightManagementApp() {
 
   /* ---------- フォーム操作 ---------- */
   const resetForm = () => {
-    setForm({ ...initialForm, date: today() });
+    setForm((prev) => ({ ...initialForm, date: today(), morning_weight: prev.morning_weight, night_weight: prev.night_weight }));
     setEditingId(null);
   };
 
@@ -581,9 +581,12 @@ export default function WeightManagementApp() {
     setMemberLoginPasscode("");
     setEditingId(null);
     setForm(initialForm);
-    setMessage(
-      `${member.name}さんとしてログインしました。ご本人の記録のみ表示されます。`
-    );
+    setMessage(`${member.name}さんとしてログインしました。ご本人の記録のみ表示されます。`);
+    const memberRecords = records.filter((r) => r.member_name === member.name);
+    if (memberRecords.length > 0) {
+      const last = memberRecords[memberRecords.length - 1];
+      setForm((prev) => ({ ...prev, morning_weight: last.morning_weight || prev.morning_weight, night_weight: last.night_weight || prev.night_weight }));
+    }
   };
 
   /* ---------- 会員管理 ---------- */
