@@ -762,7 +762,6 @@ export default function WeightManagementApp() {
                 One Step：体重管理
               </h1>
               <p className="mt-2 text-sm leading-7 text-slate-600">
-                会員はご本人の記録のみ表示されます。管理者のみ、登録済み会員を選択して閲覧・返信できます。
               </p>
             </CardContent>
           </Card>
