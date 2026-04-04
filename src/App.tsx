@@ -141,6 +141,44 @@ function toChartData(items: RecordItem[]): ChartPoint[] {
   }));
 }
 
+function toCombinedChartData(items: RecordItem[]): { label: string; weight: number | null }[] {
+  const result: { label: string; weight: number | null }[] = [];
+  items.forEach((r) => {
+    const d = formatShortDate(r.date);
+    if (r.morning_weight !== "") result.push({ label: d + " 朝", weight: Number(r.morning_weight) });
+    if (r.night_weight !== "") result.push({ label: d + " 夜", weight: Number(r.night_weight) });
+  });
+  return result;
+}
+
+function CombinedWeightChartCard({ title, data, targetWeight }: { title: string; data: { label: string; weight: number | null }[]; targetWeight?: string }) {
+  return (
+    <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
+      <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+      <CardContent>
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 sm:gap-4 sm:text-sm">
+          <span>横軸：日時　縦軸：体重（kg）</span>
+          <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#8b5cf6" }} />朝→夜の推移</span>
+        </div>
+        <div className="h-[260px] w-full sm:h-[320px] md:h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 10, right: 16, left: 10, bottom: 12 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" fontSize={11} tickMargin={10} minTickGap={20} angle={-30} textAnchor="end" height={50} />
+              <YAxis domain={["dataMin - 1", "dataMax + 1"]} fontSize={12} width={50} label={{ value: "体重 (kg)", angle: -90, position: "insideLeft" }} />
+              <Tooltip />
+              {targetWeight && (
+                <ReferenceLine y={Number(targetWeight)} stroke="#94a3b8" strokeDasharray="6 6" label={{ value: "目標 " + Number(targetWeight).toFixed(1) + "kg", position: "insideTopRight", fontSize: 12 }} />
+              )}
+              <Line type="monotone" dataKey="weight" name="体重" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 3, fill: "#8b5cf6" }} activeDot={{ r: 5 }} connectNulls />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function chipClass(v: string) {
   if (v === "◎") return "bg-emerald-100 text-emerald-700 border-emerald-200";
   if (v === "○") return "bg-sky-100 text-sky-700 border-sky-200";
@@ -1418,8 +1456,14 @@ export default function WeightManagementApp() {
                 </div>
 
                 <WeightChartCard
-                  title="全体グラフ"
+                  title="全体グラフ（朝・夜 別）"
                   data={overallChartData}
+                  targetWeight={activeMember?.target_weight}
+                />
+
+                <CombinedWeightChartCard
+                  title="全体グラフ（朝→夜 推移）"
+                  data={toCombinedChartData(statRecords)}
                   targetWeight={activeMember?.target_weight}
                 />
 
