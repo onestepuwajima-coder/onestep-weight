@@ -451,7 +451,20 @@ export default function WeightManagementApp() {
   }, []);
 
   useEffect(() => {
-    fetchAll();
+    fetchAll().then(() => {
+      try {
+        const saved = localStorage.getItem("onestep_session");
+        if (saved) {
+          const s = JSON.parse(saved);
+          if (s.role === "member" && s.name) {
+            setCurrentMemberName(s.name);
+            setRole("member");
+          } else if (s.role === "admin") {
+            setRole("admin");
+          }
+        }
+      } catch {}
+    });
   }, [fetchAll]);
 
   /* ---------- 派生データ ---------- */
@@ -607,6 +620,7 @@ export default function WeightManagementApp() {
     setAdminResetConfirmInput("");
     setShowAdminReset(false);
     setForm(initialForm);
+    localStorage.removeItem("onestep_session");
     setMessage("ログアウトしました。");
   };
 
@@ -629,6 +643,7 @@ export default function WeightManagementApp() {
       return setMessage("管理者パスコードが一致しません。");
     setRole("admin");
     setAdminLoginInput("");
+    localStorage.setItem("onestep_session", JSON.stringify({ role: "admin" }));
     setMessage("管理者としてログインしました。");
   };
 
