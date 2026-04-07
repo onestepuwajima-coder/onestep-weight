@@ -151,7 +151,7 @@ function toCombinedChartData(items: RecordItem[]): { label: string; weight: numb
   return result;
 }
 
-function CombinedWeightChartCard({ title, data, targetWeight }: { title: string; data: { label: string; weight: number | null }[]; targetWeight?: string }) {
+function CombinedWeightChartCard({ title, data, targetWeight, morningAvg, nightAvg }: { title: string; data: { label: string; weight: number | null }[]; targetWeight?: string; morningAvg?: string | null; nightAvg?: string | null }) {
   return (
     <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
@@ -159,6 +159,11 @@ function CombinedWeightChartCard({ title, data, targetWeight }: { title: string;
         <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 sm:gap-4 sm:text-sm">
           <span>横軸：日時　縦軸：体重（kg）</span>
           <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#8b5cf6" }} />朝→夜の推移</span>
+        </div>
+        <div className="mb-3 flex flex-wrap gap-4">
+          {morningAvg && <div className="rounded-2xl bg-orange-50 px-4 py-2 text-sm text-slate-700">朝平均 <span className="font-bold text-lg">{morningAvg}</span> kg</div>}
+          {nightAvg && <div className="rounded-2xl bg-sky-50 px-4 py-2 text-sm text-slate-700">夜平均 <span className="font-bold text-lg">{nightAvg}</span> kg</div>}
+          {targetWeight && <div className="rounded-2xl bg-slate-50 px-4 py-2 text-sm text-slate-700">目標 <span className="font-bold text-lg">{Number(targetWeight).toFixed(1)}</span> kg</div>}
         </div>
         <div className="h-[260px] w-full sm:h-[320px] md:h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -1401,59 +1406,7 @@ export default function WeightManagementApp() {
               </Card>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  <StatCard
-                    title="最新の朝体重"
-                    value={latest ? fmtWeight(latest.morning_weight) : "-"}
-                  />
-                  <StatCard
-                    title="最新の夜体重"
-                    value={latest ? fmtWeight(latest.night_weight) : "-"}
-                  />
-                  <StatCard
-                    title="7日平均（朝／夜）"
-                    value={
-                      <>
-                        {morning7 !== null ? `${morning7} kg` : "-"}
-                        <span className="mx-2 text-slate-400">／</span>
-                        {night7 !== null ? `${night7} kg` : "-"}
-                      </>
-                    }
-                  />
-                  <StatCard
-                    title="30日平均（朝／夜）"
-                    value={
-                      <>
-                        {morning30 !== null ? `${morning30} kg` : "-"}
-                        <span className="mx-2 text-slate-400">／</span>
-                        {night30 !== null ? `${night30} kg` : "-"}
-                      </>
-                    }
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <StatCard
-                    title="前日比（朝／夜）"
-                    value={
-                      <>
-                        {morningDiff !== null ? `${morningDiff} kg` : "-"}
-                        <span className="mx-2 text-slate-400">／</span>
-                        {nightDiff !== null ? `${nightDiff} kg` : "-"}
-                      </>
-                    }
-                  />
-                  <StatCard
-                    title="目標との差（朝／夜）"
-                    value={
-                      <>
-                        {morningGap !== null ? `${morningGap} kg` : "-"}
-                        <span className="mx-2 text-slate-400">／</span>
-                        {nightGap !== null ? `${nightGap} kg` : "-"}
-                      </>
-                    }
-                  />
-                </div>
+                
 
                 <WeightChartCard
                   title="全体グラフ（朝・夜 別）"
@@ -1465,6 +1418,8 @@ export default function WeightManagementApp() {
                   title="全体グラフ（朝→夜 推移）"
                   data={toCombinedChartData(statRecords)}
                   targetWeight={activeMember?.target_weight}
+                  morningAvg={morning7}
+                  nightAvg={night7}
                 />
 
                 
