@@ -395,7 +395,7 @@ function WeightPicker({ value, onChange, label }: { value: string; onChange: (v:
     <div style={{ marginBottom: 8 }}>
       <div style={{ fontSize: 14, fontWeight: 500, color: "#334155", marginBottom: 10 }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
-        <Drum items={[3,4,5,6,7,8,9]} selected={tens} onSelect={(t) => buildValue(t, ones, dec)} />
+        <Drum items={[0,1,2,3,4,5,6,7,8,9]} selected={tens} onSelect={(t) => buildValue(t, ones, dec)} />
         <Drum items={[0,1,2,3,4,5,6,7,8,9]} selected={ones} onSelect={(o) => buildValue(tens, o, dec)} />
         <div style={{ fontSize: 28, fontWeight: 700, color: "#334155", padding: "0 1px", alignSelf: "center" }}>.</div>
         <Drum items={[0,1,2,3,4,5,6,7,8,9]} selected={dec} onSelect={(d) => buildValue(tens, ones, d)} />
@@ -638,7 +638,7 @@ export default function WeightManagementApp() {
 
   /* ---------- フォーム操作 ---------- */
   const resetForm = () => {
-    setForm((prev) => ({ ...initialForm, date: today(), morning_weight: prev.morning_weight, night_weight: prev.night_weight }));
+    setForm({ ...initialForm, date: today() });
     setEditingId(null);
   };
 
@@ -1281,8 +1281,8 @@ export default function WeightManagementApp() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div><WeightPicker label="朝の体重" value={form.morning_weight || "56.0"} onChange={(v) => change("morning_weight", v)} /></div>
-                    <div><WeightPicker label="夜の体重" value={form.night_weight || "56.0"} onChange={(v) => change("night_weight", v)} /></div>
+                    <div><WeightPicker label="朝の体重" value={form.morning_weight || "0.0"} onChange={(v) => change("morning_weight", v)} /></div>
+                    <div><WeightPicker label="夜の体重" value={form.night_weight || "0.0"} onChange={(v) => change("night_weight", v)} /></div>
                   </div>
 
                   <div className="space-y-3">
@@ -1467,47 +1467,9 @@ export default function WeightManagementApp() {
                   targetWeight={activeMember?.target_weight}
                 />
 
-                {recentMonthKeys.map((monthKey) => (
-                  <WeightChartCard
-                    key={monthKey}
-                    title={formatMonthLabel(monthKey)}
-                    data={toChartData(monthGroups[monthKey] || [])}
-                    targetWeight={activeMember?.target_weight}
-                  />
-                ))}
+                
 
-                {archivedMonthKeys.length > 0 && (
-                  <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
-                    <CardHeader>
-                      <CardTitle>月別グラフを検索</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="monthSearch">
-                          3か月より前の月を表示
-                        </Label>
-                        <Select
-                          value={searchedMonthKey || ""}
-                          onValueChange={setSearchedMonthKey}
-                        >
-                          <SelectTrigger
-                            id="monthSearch"
-                            className="rounded-2xl"
-                          >
-                            <SelectValue placeholder="月を選択" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {archivedMonthKeys.map((monthKey) => (
-                              <SelectItem key={monthKey} value={monthKey}>
-                                {formatMonthSearchLabel(monthKey)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                
 
                 {searchedMonthKey && searchedMonthData.length > 0 && (
                   <WeightChartCard
