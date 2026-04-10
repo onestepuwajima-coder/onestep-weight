@@ -786,6 +786,18 @@ export default function WeightManagementApp() {
     setMessage(`${activeMember.name}さんの目標体重を更新しました。`);
   };
 
+  const deleteMember = async (name: string) => {
+    if (!window.confirm(name + "さんを削除しますか？\n※ この会員の体重記録もすべて削除されます。")) return;
+    const { error: recErr } = await supabase.from("records").delete().eq("member_name", name);
+    if (recErr) return setMessage("記録の削除に失敗しました。");
+    const { error: memErr } = await supabase.from("members").delete().eq("name", name);
+    if (memErr) return setMessage("会員の削除に失敗しました。");
+    setMembers((prev) => prev.filter((m) => m.name !== name));
+    setRecords((prev) => prev.filter((r) => r.member_name !== name));
+    if (selectedMember === name) setSelectedMember("");
+    setMessage(name + "さんを削除しました。");
+  };
+
   /* ---------- 記録の保存・編集・削除 ---------- */
   const saveRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1207,6 +1219,18 @@ export default function WeightManagementApp() {
                       会員を登録する
                     </Button>
                   </div>
+
+                  {sortedMembers.length > 0 && (
+                    <div className="space-y-2 rounded-3xl border border-slate-100 p-4">
+                      <div className="text-sm font-semibold text-slate-700">登録済み会員</div>
+                      {sortedMembers.map((m) => (
+                        <div key={m.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+                          <span className="text-sm text-slate-700">{m.name}</span>
+                          <Button variant="outline" size="sm" className="rounded-xl text-xs text-rose-500 border-rose-200 hover:bg-rose-50" onClick={() => deleteMember(m.name)}>削除</Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
