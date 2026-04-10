@@ -80,6 +80,10 @@ type ChartPoint = {
 
 const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() + d.getTimezoneOffset() + 540); return d.toISOString().slice(0, 10); };
 
+function normalize(str: string): string {
+  return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).trim();
+}
+
 const initialForm: FormState = {
   date: today(),
   morning_weight: "",
@@ -682,7 +686,7 @@ export default function WeightManagementApp() {
   };
 
   const loginAdmin = () => {
-    if (adminLoginInput !== adminPasscode)
+    if (normalize(adminLoginInput) !== normalize(adminPasscode))
       return setMessage("管理者パスコードが一致しません。");
     setRole("admin");
     setAdminLoginInput("");
@@ -712,8 +716,8 @@ export default function WeightManagementApp() {
   const loginMember = () => {
     const member = members.find(
       (m) =>
-        m.name === memberLoginName.trim() &&
-        m.passcode === memberLoginPasscode
+        normalize(m.name) === normalize(memberLoginName) &&
+        normalize(m.passcode) === normalize(memberLoginPasscode)
     );
     if (!member)
       return setMessage("会員名または会員パスコードが一致しません。");
@@ -733,8 +737,8 @@ export default function WeightManagementApp() {
 
   /* ---------- 会員管理 ---------- */
   const registerMember = async () => {
-    const name = newMemberName.trim();
-    const pass = newMemberPasscode.trim();
+    const name = normalize(newMemberName);
+    const pass = normalize(newMemberPasscode);
     if (!name || !pass)
       return setMessage("会員名と会員パスコードを入力してください。");
     if (members.some((m) => m.name === name))
