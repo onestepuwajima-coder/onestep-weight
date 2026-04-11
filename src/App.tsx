@@ -155,6 +155,67 @@ function toCombinedChartData(items: RecordItem[]): { label: string; weight: numb
   return result;
 }
 
+function mealToNum(v: string): number {
+  if (v === "◎") return 4;
+  if (v === "○") return 3;
+  if (v === "△") return 2;
+  if (v === "×") return 1;
+  return 0;
+}
+
+function MealBalanceChart({ records: items }: { records: RecordItem[] }) {
+  if (items.length === 0) return null;
+  const recent = items.slice(-14);
+  const data = recent.map((r) => {
+    const b = mealToNum(r.breakfast);
+    const l = mealToNum(r.lunch);
+    const d = mealToNum(r.dinner);
+    return {
+      date: formatShortDate(r.date),
+      breakfast: b,
+      lunch: l,
+      dinner: d,
+      dinnerHeavy: d > b,
+    };
+  });
+
+  const heavyDays = data.filter((d) => d.dinnerHeavy).length;
+  const goodDays = data.filter((d) => !d.dinnerHeavy && d.breakfast > 0).length;
+
+  return (
+    <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
+      <CardHeader><CardTitle>食事バランスグラフ（直近14日）</CardTitle></CardHeader>
+      <CardContent>
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 sm:gap-4 sm:text-sm">
+          <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#f97316" }} />朝食</span>
+          <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#0ea5e9" }} />昼食</span>
+          <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#8b5cf6" }} />夕食</span>
+        </div>
+        <div className="mb-2 flex flex-wrap gap-3">
+          <div className="rounded-2xl bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">朝食≧夕食の日: <span className="font-bold">{goodDays}日</span></div>
+          <div className="rounded-2xl bg-rose-50 px-3 py-1.5 text-xs text-rose-700">夕食＞朝食の日: <span className="font-bold">{heavyDays}日</span></div>
+        </div>
+        <div className="h-[220px] w-full sm:h-[280px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 10, right: 16, left: 10, bottom: 12 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" fontSize={11} tickMargin={8} minTickGap={12} />
+              <YAxis domain={[0, 5]} fontSize={12} width={30} ticks={[1,2,3,4]} tickFormatter={(v: number) => ["","×","△","○","◎"][v] || ""} />
+              <Tooltip formatter={(v: number) => ["","×(なし)","△(少なめ)","○(普通)","◎(多め)"][v] || ""} />
+              <Line type="monotone" dataKey="breakfast" name="朝食" stroke="#f97316" strokeWidth={2.5} dot={{ r: 3, fill: "#f97316" }} connectNulls />
+              <Line type="monotone" dataKey="lunch" name="昼食" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3, fill: "#0ea5e9" }} connectNulls />
+              <Line type="monotone" dataKey="dinner" name="夕食" stroke="#8b5cf6" strokeWidth={2.5} dot={{ r: 3, fill: "#8b5cf6" }} connectNulls />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs leading-5 text-slate-500">
+          <span className="font-semibold text-slate-600">なぜ夕食を控えめに？</span> ハーバード大の研究（Vujović et al., 2022, Cell Metabolism）では、遅い時間帯の食事は空腹感の増加・代謝の低下・脂肪蓄積の促進につながることが確認されています。朝食をしっかり摂り、夕食を軽めにすることが体重管理に有効とされています。
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function CombinedWeightChartCard({ title, data, targetWeight, morningAvg, nightAvg }: { title: string; data: { label: string; weight: number | null }[]; targetWeight?: string; morningAvg?: string | null; nightAvg?: string | null }) {
   return (
     <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
@@ -1443,6 +1504,8 @@ export default function WeightManagementApp() {
                   morningAvg={morning7}
                   nightAvg={night7}
                 />
+
+                <MealBalanceChart records={statRecords} />
 
                 
 
