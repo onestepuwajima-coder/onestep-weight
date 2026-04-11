@@ -1436,12 +1436,6 @@ export default function WeightManagementApp() {
               <>
                 
 
-                <WeightChartCard
-                  title="全体グラフ（朝・夜 別）"
-                  data={overallChartData}
-                  targetWeight={activeMember?.target_weight}
-                />
-
                 <CombinedWeightChartCard
                   title="全体グラフ（朝→夜 推移）"
                   data={toCombinedChartData(statRecords)}
@@ -1449,6 +1443,8 @@ export default function WeightManagementApp() {
                   morningAvg={morning7}
                   nightAvg={night7}
                 />
+
+                
 
                 
 
